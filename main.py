@@ -301,7 +301,7 @@ def get_final_advice():
 
     # New: adaptive threshold from mean absolute score × factor + floor
     mean_abs = scores.abs().mean() or 0
-    std_threshold = max(mean_abs * 1.2, 1.5)  # e.g., factor=1.2, floor=1.5
+    std_threshold = max(mean_abs * 1.2, 1.5)
 
     # Final advice
     if final_score >= std_threshold:
