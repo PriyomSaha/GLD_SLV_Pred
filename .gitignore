@@ -1,0 +1,9 @@
+# Ignore node_modules and environment files
+node_modules/
+.env
+dist/
+*.log
+.venv/
+__pycache__/
+.idea/
+.DS_Store
