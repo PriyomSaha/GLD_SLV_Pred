@@ -297,7 +297,7 @@ def get_final_advice(fii):
     scores["usdinr"] = -weights["usdinr"] * (
         (usdinr - usdinr_baseline) /
         usdinr_baseline) * asym_scale(usdinr - usdinr_baseline)
-    scores["global"] = weights["global"] * max(min(global_sentiment / 3, 1),
+    scores["global"] = -weights["global"] * max(min(global_sentiment / 3, 1),
                                                -1)
     scores["us10y"] = -weights["us10y"] * (
         (us10y - us10y_baseline) / us10y_baseline) * asym_scale(us10y -
@@ -329,7 +329,8 @@ def get_final_advice(fii):
 
     # New: adaptive threshold from mean absolute score × factor + floor
     mean_abs = scores.abs().mean() or 0
-    std_threshold = max(mean_abs * 1.2, 1.5)
+    # std_threshold = max(mean_abs * 1.2, 1.5)
+    std_threshold = scores.std() * 1.2 + scores.abs().mean() * 0.5
 
     # Final advice
     if final_score >= std_threshold:
@@ -425,20 +426,22 @@ def run_daily_signal():
     today = datetime.today()
 
     message = (
-        f"📅 {today.strftime('%d %b %Y')} | Gold & Silver FoF Advisor (India)\n\n"
+        f"📅 {today.strftime('%d %b %Y')} | 🪙 Gold & Silver FoF Advisor (India)\n\n"
         f"📈 Nifty50: {nifty:.2f}\n"
+        f"📊 Nifty 1D Change: {prev_change:.2f}%\n"
+        f"📉 Nifty Trend: {trend.title()}\n"
+        f"📐 Nifty Average: {nifty_avg:.2f}\n"
+        f"💰 FII Net Inflow: ₹{fii:.2f} Cr\n"
         f"🌪 India VIX: {vix:.2f}\n"
+        f"🌍 Global Sentiment Score: {global_score:+.2f}\n"
         f"🛢 Crude Oil (WTI): ${crude:.2f}\n"
-        f"💰 FII Net: ₹{fii:.2f} Cr\n"
         f"💱 USD/INR: ₹{usdinr:.2f}\n"
-        f"📊 1D Nifty Change: {prev_change:.2f}%\n"
-        f"📉 Trend: {trend.title()}\n"
-        f"🌍 Global Market Sentiment Score: {global_score}\n"
         f"💵 Dollar Index (DXY): {dxy:.2f}\n"
         f"🇺🇸 US 10Y Yield: {us10y:.2f}%\n"
-        f"🏅 Gold Futures: {gold_trend:.2f}% 📈\n"
-        f"🥈 Silver Futures: {silver_trend:.2f}% 📈\n"
-        f"{sig}")
+        f"🏅 Gold Futures: {gold_trend:+.2f}%\n"
+        f"🥈 Silver Futures: {silver_trend:+.2f}%\n\n"
+        f"{sig}"
+    )
 
     print(message)
     send_telegram(message)
