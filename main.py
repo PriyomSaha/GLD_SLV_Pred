@@ -26,10 +26,39 @@ def asym_scale(value, pos_scale=1.2, neg_scale=1.5):
 # ------------------- Data Fetching -------------------
 
 
+# def get_fii_net():
+#     data = nse_fiidii("all")
+#     fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+#     return float(fii) if fii else 0.0
+
 def get_fii_net():
-    data = nse_fiidii("all")
-    fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
-    return float(fii) if fii else 0.0
+    url = "https://www.nseindia.com/api/fiidiiTradeReact"
+
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Referer": "https://www.nseindia.com/",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "application/json",
+        "Connection": "keep-alive"
+    })
+
+    try:
+        # Initial request to set cookies
+        session.get("https://www.nseindia.com", timeout=5)
+
+        # Now hit the API endpoint
+        response = session.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        # Extract FII net value
+        fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+        return float(fii) if fii else 0.0
+
+    except Exception as e:
+        print(f"❌ Failed to fetch FII data: {e}")
+        # return 0.0
 
 
 def get_nifty():
@@ -222,14 +251,13 @@ def get_nifty_avg():
 # ------------------- Scoring & Advice -------------------
 
 
-def get_final_advice():
+def get_final_advice(fii):
     # Fetch all required data
     nifty = get_nifty()
     nifty_trend = get_nifty_trend()
     nifty_avg = get_nifty_avg()
     nifty_change = get_nifty_prev_change()
 
-    fii = get_fii_net()
     crude, crude_std, crude_baseline = get_crude()
     dxy, dxy_std, dxy_baseline = get_dxy()
     us10y, us10y_std, us10y_baseline = get_us10y_yield()
@@ -392,7 +420,7 @@ def run_daily_signal():
     us10y, _, _ = get_us10y_yield()
     gold_trend, silver_trend = get_gold_silver_trend()
 
-    sig = get_final_advice()
+    sig = get_final_advice(fii)
 
     today = datetime.today()
 
@@ -418,3 +446,4 @@ def run_daily_signal():
 
 # def run_daily_signal():
 # if __name__ == "__main__":
+#     run_daily_signal()
