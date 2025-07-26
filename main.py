@@ -476,9 +476,9 @@ def run_daily_signal():
     )
 
     print(message)
-    # send_telegram(message)
+    send_telegram(message)
 
 
 # def run_daily_signal():
-if __name__ == "__main__":
-    run_daily_signal()
+# if __name__ == "__main__":
+#     run_daily_signal()
