@@ -4,7 +4,9 @@ import requests
 from datetime import datetime
 import json
 import time
+import random
 import pandas as pd
+from fake_useragent import UserAgent
 
 bot_token = "8169560167:AAEe0czlYttpySFVImxb4BNROZaEhdQA0Aw"
 chat_id = "1022549373"
@@ -31,22 +33,30 @@ def asym_scale(value, pos_scale=1.2, neg_scale=1.5):
 #     fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
 #     return float(fii) if fii else 0.0
 
+def get_random_headers():
+    ua = UserAgent()
+    return {
+        "User-Agent": ua.random,
+        "Referer": "https://www.nseindia.com/",
+        "Accept": "application/json",
+        "Accept-Language": "en-US,en;q=0.9",
+        "X-Requested-With": "XMLHttpRequest",
+        "Connection": "keep-alive"
+    }
+
 def get_fii_net():
     url = "https://www.nseindia.com/api/fiidiiTradeReact"
 
+    headers = get_random_headers()
+
     session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Referer": "https://www.nseindia.com/",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept": "application/json",
-        "Connection": "keep-alive"
-    })
+    session.headers.update(headers)
+
 
     try:
         # Initial request to set cookies
         session.get("https://www.nseindia.com", timeout=5)
-
+        time.sleep(random.uniform(1.5, 3.0))
         # Now hit the API endpoint
         response = session.get(url, timeout=10)
         response.raise_for_status()
@@ -60,6 +70,21 @@ def get_fii_net():
         print(f"❌ Failed to fetch FII data: {e}")
         # return 0.0
 
+# def get_fii_net_playwright():
+#     with sync_playwright() as p:
+#         browser = p.chromium.launch(headless=True)
+#         context = browser.new_context()
+#         page = context.new_page()
+#         page.goto("https://www.nseindia.com")
+#
+#         # Wait and fetch data using page.request
+#         response = page.request.get("https://www.nseindia.com/api/fiidiiTradeReact")
+#         data = json.loads(response.text())
+#
+#         browser.close()
+#
+#         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+#         return float(fii) if fii else 0.0
 
 def get_nifty():
     return yf.Ticker("^NSEI").info["regularMarketPrice"]
@@ -336,27 +361,23 @@ def get_final_advice(fii):
     if final_score >= std_threshold:
         return (
             f"📊 Score: {final_score:.2f} ≥ Threshold: {std_threshold:.2f}\n"
-            f"✅ Market indicators currently favor higher gold & silver prices.\n\n"
-            f"🟢 📈 You may choose to BUY gold & silver.")
-            f"🟢 Gold & Silver prices may be high today.\n"
-            f"💡 You can consider selling or booking profit."
+            f"📈 Gold & silver prices may be high today.\n\n"
+            f"🙅‍♂️ Avoid buying now.\n"
+            f"💰 Consider booking profit if you're already holding."
         )
     elif final_score <= -std_threshold:
         return (
             f"📊 Score: {final_score:.2f} ≤ -Threshold: {std_threshold:.2f}\n"
-            f"⚠️ Market indicators suggest possible downside for gold & silver.\n\n"
-            f"🔴 📉 You may choose to SELL gold & silver.")
-            f"🔴 Gold & Silver prices may be low today.\n"
-            f"💡 You can consider buying at lower levels."
+            f"📉 Gold & silver prices may be lower today.\n\n"
+            f"🛒 Good time to buy at lower levels.\n"
+            f"✅ You may consider entering now."
         )
     else:
-        return (f"📊 Score: {final_score:.2f} is within ±{std_threshold:.2f}\n"
-                f"📊 Market trend is neutral; no strong signal detected.\n\n"
-                f"🟡 🤝 Better to HOLD and wait for a clearer signal.")
         return (
             f"📊 Score: {final_score:.2f} is within ±{std_threshold:.2f}\n"
-            f"🟡 No strong move expected today.\n"
-            f"💡 Better to wait and hold."
+            f"➖ No strong move expected today.\n\n"
+            f"⏳ Better to wait and watch.\n"
+            f"🤝 HOLD your position."
         )
 
 
@@ -455,9 +476,9 @@ def run_daily_signal():
     )
 
     print(message)
-    send_telegram(message)
+    # send_telegram(message)
 
 
 # def run_daily_signal():
-# if __name__ == "__main__":
-#     run_daily_signal()
+if __name__ == "__main__":
+    run_daily_signal()
