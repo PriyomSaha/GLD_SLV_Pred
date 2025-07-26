@@ -338,15 +338,26 @@ def get_final_advice(fii):
             f"📊 Score: {final_score:.2f} ≥ Threshold: {std_threshold:.2f}\n"
             f"✅ Market indicators currently favor higher gold & silver prices.\n\n"
             f"🟢 📈 You may choose to BUY gold & silver.")
+            f"🟢 Gold & Silver prices may be high today.\n"
+            f"💡 You can consider selling or booking profit."
+        )
     elif final_score <= -std_threshold:
         return (
             f"📊 Score: {final_score:.2f} ≤ -Threshold: {std_threshold:.2f}\n"
             f"⚠️ Market indicators suggest possible downside for gold & silver.\n\n"
             f"🔴 📉 You may choose to SELL gold & silver.")
+            f"🔴 Gold & Silver prices may be low today.\n"
+            f"💡 You can consider buying at lower levels."
+        )
     else:
         return (f"📊 Score: {final_score:.2f} is within ±{std_threshold:.2f}\n"
                 f"📊 Market trend is neutral; no strong signal detected.\n\n"
                 f"🟡 🤝 Better to HOLD and wait for a clearer signal.")
+        return (
+            f"📊 Score: {final_score:.2f} is within ±{std_threshold:.2f}\n"
+            f"🟡 No strong move expected today.\n"
+            f"💡 Better to wait and hold."
+        )
 
 
 # ------------------- Telegram -------------------
