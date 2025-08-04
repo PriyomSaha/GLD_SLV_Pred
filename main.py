@@ -7,6 +7,9 @@ import time
 import random
 import pandas as pd
 from fake_useragent import UserAgent
+from playwright.sync_api import sync_playwright
+from random_user_agent.user_agent import UserAgent
+from random_user_agent.params import SoftwareName, OperatingSystem
 
 bot_token = "8169560167:AAEe0czlYttpySFVImxb4BNROZaEhdQA0Aw"
 chat_id = "1022549373"
@@ -476,7 +479,7 @@ def run_daily_signal():
     )
 
     print(message)
-    # send_telegram(message)
+    send_telegram(message)
 
 
 # def run_daily_signal():
