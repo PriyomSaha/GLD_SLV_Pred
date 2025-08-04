@@ -36,58 +36,100 @@ def asym_scale(value, pos_scale=1.2, neg_scale=1.5):
 #     fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
 #     return float(fii) if fii else 0.0
 
+# def get_random_headers():
+#     ua = UserAgent()
+#     return {
+#         "User-Agent": ua.random,
+#         "Referer": "https://www.nseindia.com/",
+#         "Accept": "application/json",
+#         "Accept-Language": "en-US,en;q=0.9",
+#         "X-Requested-With": "XMLHttpRequest",
+#         "Connection": "keep-alive"
+#     }
+
 def get_random_headers():
-    ua = UserAgent()
+    # Desktop browsers only
+    software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value, SoftwareName.EDGE.value]
+    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.MAC.value]
+
+    # Create rotator with filtered desktop user agents
+    user_agent_rotator = UserAgent(
+        software_names=software_names,
+        operating_systems=operating_systems,
+        limit=100  # number of UAs to load
+    )
+
+    ua = user_agent_rotator.get_random_user_agent()
+
     return {
-        "User-Agent": ua.random,
-        "Referer": "https://www.nseindia.com/",
+        "User-Agent": ua,
         "Accept": "application/json",
         "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.nseindia.com/",
         "X-Requested-With": "XMLHttpRequest",
-        "Connection": "keep-alive"
+        "Connection": "keep-alive",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Origin": "https://www.nseindia.com",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
     }
+
+# def get_fii_net():
+#     url = "https://www.nseindia.com/api/fiidiiTradeReact"
+#
+#     headers = get_random_headers()
+#
+#     session = requests.Session()
+#     session.headers.update(headers)
+#
+#
+#     try:
+#         # Initial request to set cookies
+#         session.get("https://www.nseindia.com", timeout=5)
+#         time.sleep(random.uniform(1.5, 3.0))
+#         # Now hit the API endpoint
+#         response = session.get(url, timeout=10)
+#         response.raise_for_status()
+#         data = response.json()
+#
+#         # Extract FII net value
+#         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+#         return float(fii) if fii else 0.0
+#
+#     except Exception as e:
+#         print(f"❌ Failed to fetch FII data: {e}")
+#         # return 0.0
 
 def get_fii_net():
     url = "https://www.nseindia.com/api/fiidiiTradeReact"
+    home_url = "https://www.nseindia.com/"
 
     headers = get_random_headers()
 
     session = requests.Session()
     session.headers.update(headers)
 
-
     try:
-        # Initial request to set cookies
-        session.get("https://www.nseindia.com", timeout=5)
-        time.sleep(random.uniform(1.5, 3.0))
-        # Now hit the API endpoint
+        # Step 1: Initial request to get cookies
+        homepage = session.get(home_url, timeout=5)
+        homepage.raise_for_status()
+
+        # Step 2: Sleep to simulate real user
+        time.sleep(random.uniform(2.0, 3.5))
+
+        # Step 3: Make actual API call
         response = session.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
 
-        # Extract FII net value
+        # Step 4: Extract FII net value
         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
         return float(fii) if fii else 0.0
 
     except Exception as e:
         print(f"❌ Failed to fetch FII data: {e}")
         # return 0.0
-
-# def get_fii_net_playwright():
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(headless=True)
-#         context = browser.new_context()
-#         page = context.new_page()
-#         page.goto("https://www.nseindia.com")
-#
-#         # Wait and fetch data using page.request
-#         response = page.request.get("https://www.nseindia.com/api/fiidiiTradeReact")
-#         data = json.loads(response.text())
-#
-#         browser.close()
-#
-#         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
-#         return float(fii) if fii else 0.0
 
 def get_nifty():
     return yf.Ticker("^NSEI").info["regularMarketPrice"]
