@@ -68,7 +68,8 @@ def get_random_headers():
         "Referer": "https://www.nseindia.com/",
         "X-Requested-With": "XMLHttpRequest",
         "Connection": "keep-alive",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
+        # "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Encoding": "identity",
         "Origin": "https://www.nseindia.com",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
@@ -111,25 +112,74 @@ def get_fii_net():
     session.headers.update(headers)
 
     try:
-        # Step 1: Initial request to get cookies
-        homepage = session.get(home_url, timeout=5)
-        homepage.raise_for_status()
+        # # Step 1: Initial request to get cookies
+        # homepage = session.get(home_url, timeout=5)
+        # homepage.raise_for_status()
+        # cookies = homepage.headers.get('Set-Cookie')
+        #
+        # # Step 2: Sleep to simulate real user
+        # time.sleep(random.uniform(2.0, 3.5))
+        #
+        # # Step 3: Make actual API call
+        # response = session.get(url, timeout=10)
+        # response.raise_for_status()
+        # data = response.json()
+        # # Step 4: Extract FII net value
+        # fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+        # return float(fii) if fii else 0.0
 
-        # Step 2: Sleep to simulate real user
-        time.sleep(random.uniform(2.0, 3.5))
-
-        # Step 3: Make actual API call
-        response = session.get(url, timeout=10)
-        response.raise_for_status()
+        response = requests.request("GET", url, headers=headers)
         data = response.json()
-
-        # Step 4: Extract FII net value
         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
         return float(fii) if fii else 0.0
 
     except Exception as e:
         print(f"❌ Failed to fetch FII data: {e}")
         # return 0.0
+
+# from playwright.sync_api import sync_playwright
+# import requests
+#
+# def get_nse_cookies():
+#     with sync_playwright() as p:
+#         browser = p.chromium.launch(headless=False, slow_mo=100)  # Headed mode
+#         context = browser.new_context()
+#         page = context.new_page()
+#
+#         # Go to homepage and wait
+#         print("🔍 Opening browser to get NSE cookies...")
+#         page.goto("https://www.nseindia.com", timeout=15000)
+#         page.wait_for_timeout(6000)  # wait for bot challenges to finish
+#
+#         # Grab cookies
+#         cookies = context.cookies()
+#         cookie_dict = {cookie['name']: cookie['value'] for cookie in cookies}
+#
+#         browser.close()
+#         return cookie_dict
+
+# def get_fii_net():
+#     url = "https://www.nseindia.com/api/fiidiiTradeReact"
+#     cookies = get_nse_cookies()
+#
+#     headers = {
+#         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+#         'Accept': 'application/json, text/plain, */*',
+#         'Accept-Encoding': 'gzip, deflate, br',
+#         'Referer': 'https://www.nseindia.com/',
+#         'Connection': 'keep-alive',
+#         'X-Requested-With': 'XMLHttpRequest'
+#     }
+#
+#     try:
+#         response = requests.get(url, headers=headers, cookies=cookies, timeout=10)
+#         response.raise_for_status()
+#         data = response.json()
+#         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
+#         return float(fii) if fii else 0.0
+#     except Exception as e:
+#         print(f"❌ Failed to fetch FII data: {e}")
+#         return 0.0
 
 def get_nifty():
     return yf.Ticker("^NSEI").info["regularMarketPrice"]
