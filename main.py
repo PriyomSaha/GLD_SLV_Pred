@@ -7,17 +7,23 @@ import random
 import pandas as pd
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
+from seleniumbase import SB
 
 bot_token = "8169560167:AAEe0czlYttpySFVImxb4BNROZaEhdQA0Aw"
 chat_id = "1022549373"
 
 
+# ------------------- SAFE FLOAT (CRASH FIX ONLY) -------------------
+def to_float(x, default=0.0):
+    if isinstance(x, pd.Series):
+        x = x.iloc[-1]
+    if pd.isna(x):
+        return default
+    return float(x)
+
+
 # ------------------- Utility -------------------
 def compute_dynamic_weight(std, base_weight=1.0, scale=10):
-    """
-    Compute dynamic weight based on standard deviation.
-    More volatile indicators get more influence.
-    """
     return round(base_weight * (1 + std / scale), 2)
 
 
@@ -26,109 +32,16 @@ def asym_scale(value, pos_scale=1.2, neg_scale=1.5):
 
 
 # ------------------- Data Fetching -------------------
-
-
-# def get_fii_net():
-#     data = nse_fiidii("all")
-#     fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
-#     return float(fii) if fii else 0.0
-
-# def get_random_headers():
-#     ua = UserAgent()
-#     return {
-#         "User-Agent": ua.random,
-#         "Referer": "https://www.nseindia.com/",
-#         "Accept": "application/json",
-#         "Accept-Language": "en-US,en;q=0.9",
-#         "X-Requested-With": "XMLHttpRequest",
-#         "Connection": "keep-alive"
-#     }
-
-# def get_random_headers():
-#     # Desktop browsers only
-#     software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value, SoftwareName.EDGE.value]
-#     operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.MAC.value]
-
-#     # Create rotator with filtered desktop user agents
-#     user_agent_rotator = UserAgent(
-#         software_names=software_names,
-#         operating_systems=operating_systems,
-#         limit=100  # number of UAs to load
-#     )
-
-#     ua = user_agent_rotator.get_random_user_agent()
-
-#     return {
-#         "User-Agent": ua,
-#         "Accept": "application/json",
-#         "Accept-Language": "en-US,en;q=0.9",
-#         "Referer": "https://www.nseindia.com/",
-#         "X-Requested-With": "XMLHttpRequest",
-#         "Connection": "keep-alive",
-#         # "Accept-Encoding": "gzip, deflate, br, zstd",
-#         "Accept-Encoding": "identity",
-#         "Origin": "https://www.nseindia.com",
-#         "Sec-Fetch-Dest": "empty",
-#         "Sec-Fetch-Mode": "cors",
-#         "Sec-Fetch-Site": "same-origin",
-#     }
-
-# def get_fii_net():
-#     url = "https://www.nseindia.com/api/fiidiiTradeReact"
-#     home_url = "https://www.nseindia.com/"
-
-#     headers = get_random_headers()
-
-#     # Create a session to store cookies between requests
-#     session = requests.Session()
-
-#     # Add retry logic
-#     retries = Retry(
-#         total=3,
-#         backoff_factor=1,
-#         status_forcelist=[429, 500, 502, 503, 504]
-#     )
-#     session.mount("https://", HTTPAdapter(max_retries=retries))
-#     session.headers.update(headers)
-
-#     try:
-#         # Step 1: Visit homepage to collect cookies
-#         home_resp = session.get(home_url, timeout=10)
-#         home_resp.raise_for_status()
-
-#         # Step 2: Random delay to mimic human browsing
-#         time.sleep(random.uniform(2.0, 4.0))
-
-#         # Step 3: Request API endpoint using same session (cookies + headers)
-#         api_resp = session.get(url, timeout=10)
-#         api_resp.raise_for_status()
-#         data = api_resp.json()
-
-#         # Step 4: Extract FII net value
-#         fii = next((x['netValue'] for x in data if 'FII' in x.get('category', '')), None)
-#         return float(fii) if fii else 0.0
-
-#     except Exception as e:
-#         print(f"❌ Failed to fetch FII data: {e}")
-#         return None
-
-
-from seleniumbase import SB
-import json
-import time
-
 def get_fii_net():
     api_url = "https://www.nseindia.com/api/fiidiiTradeReact"
     home_url = "https://www.nseindia.com/"
 
     try:
         with SB(uc=True, headed=True, locale="en") as sb:
-            # Step 1: Open NSE homepage to establish session
             sb.open(home_url)
             sb.wait_for_ready_state_complete()
-            time.sleep(3)  # human-like pause
+            time.sleep(3)
 
-            # Step 2: Fetch API via browser (bypasses bot detection)
             response = sb.execute_script("""
                 return fetch(arguments[0], {
                     method: 'GET',
@@ -138,65 +51,27 @@ def get_fii_net():
 
             data = json.loads(response)
 
-            # Step 3: Extract FII net value
             fii = next(
                 (float(x["netValue"]) for x in data
                  if "FII" in x.get("category", "")),
                 0.0
             )
-
             return fii
 
     except Exception as e:
         print(f"❌ SeleniumBase NSE fetch failed: {e}")
-        return None
+        return 0.0
 
-
-# def get_fii_net():
-#     url = "https://www.nseindia.com/api/fiidiiTradeReact"
-#     home_url = "https://www.nseindia.com/"
-#
-#     headers = get_random_headers()
-#
-#     session = requests.Session()
-#     session.headers.update(headers)
-#
-#     try:
-#         # # Step 1: Initial request to get cookies
-#         # homepage = session.get(home_url, timeout=5)
-#         # homepage.raise_for_status()
-#         # cookies = homepage.headers.get('Set-Cookie')
-#         #
-#         # # Step 2: Sleep to simulate real user
-#         # time.sleep(random.uniform(2.0, 3.5))
-#         #
-#         # # Step 3: Make actual API call
-#         # response = session.get(url, timeout=10)
-#         # response.raise_for_status()
-#         # data = response.json()
-#         # # Step 4: Extract FII net value
-#         # fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
-#         # return float(fii) if fii else 0.0
-#
-#         response = requests.request("GET", url, headers=headers)
-#         data = response.json()
-#         fii = next((x['netValue'] for x in data if 'FII' in x['category']), None)
-#         return float(fii) if fii else 0.0
-#
-#     except Exception as e:
-#         print(f"❌ Failed to fetch FII data: {e}")
-#         # return 0.0
 
 def get_nifty():
     return yf.Ticker("^NSEI").info["regularMarketPrice"]
 
 
 def get_vix():
-    df = yf.download("^INDIAVIX",
-                     period="30d",
-                     interval="1d",
-                     auto_adjust=False)
+    df = yf.download("^INDIAVIX", period="30d", interval="1d",
+                     auto_adjust=False, progress=False)
     closes = df["Close"].dropna()
+
     vix_now = closes.iloc[-1]
     vix_std = closes.std()
     vix_mean = closes.mean()
@@ -206,12 +81,13 @@ def get_vix():
     if pd.isna(vix_std) or vix_std == 0:
         vix_std = 1.0
 
-    return float(vix_now), float(vix_std), float(vix_mean)
+    return to_float(vix_now), to_float(vix_std, 1.0), to_float(vix_mean)
 
 
 def get_crude():
     df = yf.download("CL=F", period="30d", interval="1d", progress=False)
     closes = df["Close"].dropna()
+
     crude_now = closes.iloc[-1]
     crude_std = closes.std()
     crude_mean = closes.mean()
@@ -221,31 +97,30 @@ def get_crude():
     if pd.isna(crude_std) or crude_std == 0:
         crude_std = 2.0
 
-    return float(crude_now), float(crude_std), float(crude_mean)
+    return to_float(crude_now), to_float(crude_std, 2.0), to_float(crude_mean)
 
 
 def get_usdinr():
-    df = yf.download("USDINR=X",
-                     period="30d",
-                     interval="1d",
-                     progress=False,
-                     auto_adjust=False)
+    df = yf.download("USDINR=X", period="30d", interval="1d",
+                     auto_adjust=False, progress=False)
     closes = df["Close"].dropna()
+
     usdinr_now = closes.iloc[-1]
     usdinr_std = closes.std()
     usdinr_mean = closes.mean()
 
     if isinstance(usdinr_std, pd.Series):
         usdinr_std = usdinr_std.iloc[0]
-    if pd.isna(usdinr_std) or usdinr_std == 0.0:
-        usdinr_std = 1.0  # fallback default
+    if pd.isna(usdinr_std) or usdinr_std == 0:
+        usdinr_std = 1.0
 
-    return float(usdinr_now), float(usdinr_std), float(usdinr_mean)
+    return to_float(usdinr_now), to_float(usdinr_std, 1.0), to_float(usdinr_mean)
 
 
 def get_dxy():
     df = yf.download("DX-Y.NYB", period="30d", interval="1d", progress=False)
     closes = df["Close"].dropna()
+
     dxy_now = closes.iloc[-1]
     dxy_std = closes.std()
     dxy_mean = closes.mean()
@@ -255,12 +130,13 @@ def get_dxy():
     if pd.isna(dxy_std) or dxy_std == 0:
         dxy_std = 1.0
 
-    return float(dxy_now), float(dxy_std), float(dxy_mean)
+    return to_float(dxy_now), to_float(dxy_std, 1.0), to_float(dxy_mean)
 
 
 def get_us10y_yield():
     df = yf.download("^TNX", period="30d", interval="1d", progress=False)
     closes = df["Close"].dropna() / 10
+
     us10y_now = closes.iloc[-1]
     us10y_std = closes.std()
     us10y_mean = closes.mean()
@@ -270,74 +146,47 @@ def get_us10y_yield():
     if pd.isna(us10y_std) or us10y_std == 0:
         us10y_std = 0.1
 
-    return float(us10y_now), float(us10y_std), float(us10y_mean)
+    return to_float(us10y_now), to_float(us10y_std, 0.1), to_float(us10y_mean)
 
 
 def get_gold_silver_trend():
-    # Download last 7 days of prices
-    gold = yf.download("GC=F",
-                       period="7d",
-                       interval="1d",
-                       progress=False,
-                       auto_adjust=True)
-    silver = yf.download("SI=F",
-                         period="7d",
-                         interval="1d",
-                         progress=False,
-                         auto_adjust=True)
+    gold = yf.download("GC=F", period="7d", interval="1d",
+                       auto_adjust=True, progress=False)
+    silver = yf.download("SI=F", period="7d", interval="1d",
+                         auto_adjust=True, progress=False)
 
     gold_close = gold["Close"].dropna()
     silver_close = silver["Close"].dropna()
 
-    # Use 3-day smoothed momentum for gold
-    if len(gold_close) >= 4:
-        gold_trend = gold_close.pct_change().rolling(3).mean().iloc[-1] * 100
-    else:
-        gold_trend = 0.0
+    gold_trend = (gold_close.pct_change().rolling(3).mean().iloc[-1] * 100
+                  if len(gold_close) >= 4 else 0.0)
+    silver_trend = (silver_close.pct_change().rolling(3).mean().iloc[-1] * 100
+                    if len(silver_close) >= 4 else 0.0)
 
-    # Use 3-day smoothed momentum for silver
-    if len(silver_close) >= 4:
-        silver_trend = silver_close.pct_change().rolling(
-            3).mean().iloc[-1] * 100
-    else:
-        silver_trend = 0.0
-
-    return float(gold_trend), float(silver_trend)
+    return to_float(gold_trend), to_float(silver_trend)
 
 
 def get_global_sentiment_score():
     indices = {
-        "Nikkei 225": "^N225",
+        "Nikkei": "^N225",
         "KOSPI": "^KS11",
         "Hang Seng": "^HSI",
-        "ASX 200": "^AXJO"
+        "ASX": "^AXJO"
     }
 
-    total_change = 0
-    count = 0
-
-    for name, ticker in indices.items():
+    total, count = 0, 0
+    for ticker in indices.values():
         try:
-            data = yf.download(ticker,
-                               period="2d",
-                               interval="1d",
-                               progress=False)
+            data = yf.download(ticker, period="2d", interval="1d", progress=False)
             if len(data) >= 2:
                 prev = data["Close"].iloc[-2].item()
                 curr = data["Close"].iloc[-1].item()
-
-                if pd.isnull(prev) or pd.isnull(curr) or prev <= 0:
-                    continue
-
-                change = ((curr - prev) / prev) * 100
-                total_change += change
+                total += ((curr - prev) / prev) * 100
                 count += 1
         except:
             continue
 
-    if count == 0:
-        return 0.0
-    return round(total_change / count, 2)
+    return round(total / count, 2) if count else 0.0
 
 
 # ------------------- Nifty Helpers -------------------
