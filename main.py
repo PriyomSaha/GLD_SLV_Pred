@@ -37,7 +37,12 @@ def get_fii_net():
     home_url = "https://www.nseindia.com/"
 
     try:
-        with SB(uc=True, headed=True, locale="en") as sb:
+        with SB(uc=True, headless=True, locale="en") as sb:
+            
+            sb.add_chrome_argument("--no-sandbox")
+            sb.add_chrome_argument("--disable-dev-shm-usage")
+            sb.add_chrome_argument("--disable-gpu")
+            
             sb.open(home_url)
             sb.wait_for_ready_state_complete()
             time.sleep(3)
