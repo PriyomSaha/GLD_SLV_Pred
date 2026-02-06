@@ -1,4 +1,4 @@
-FROM seleniumbase/sbase:latest
+FROM seleniumbase/seleniumbase:latest
 
 WORKDIR /app
 
