@@ -1,3 +1,4 @@
+from nsepython import nse_fiidii
 import yfinance as yf
 import requests
 from datetime import datetime
@@ -5,7 +6,10 @@ import json
 import time
 import random
 import pandas as pd
+from fake_useragent import UserAgent
 from requests.adapters import HTTPAdapter
+from random_user_agent.user_agent import UserAgent
+from random_user_agent.params import SoftwareName, OperatingSystem
 from urllib3 import Retry
 
 bot_token = "8169560167:AAEe0czlYttpySFVImxb4BNROZaEhdQA0Aw"
@@ -44,113 +48,73 @@ def asym_scale(value, pos_scale=1.2, neg_scale=1.5):
 #         "Connection": "keep-alive"
 #     }
 
-# def get_random_headers():
-#     # Desktop browsers only
-#     software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value, SoftwareName.EDGE.value]
-#     operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.MAC.value]
+def get_random_headers():
+    # Desktop browsers only
+    software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value, SoftwareName.EDGE.value]
+    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.MAC.value]
 
-#     # Create rotator with filtered desktop user agents
-#     user_agent_rotator = UserAgent(
-#         software_names=software_names,
-#         operating_systems=operating_systems,
-#         limit=100  # number of UAs to load
-#     )
+    # Create rotator with filtered desktop user agents
+    user_agent_rotator = UserAgent(
+        software_names=software_names,
+        operating_systems=operating_systems,
+        limit=100  # number of UAs to load
+    )
 
-#     ua = user_agent_rotator.get_random_user_agent()
+    ua = user_agent_rotator.get_random_user_agent()
 
-#     return {
-#         "User-Agent": ua,
-#         "Accept": "application/json",
-#         "Accept-Language": "en-US,en;q=0.9",
-#         "Referer": "https://www.nseindia.com/",
-#         "X-Requested-With": "XMLHttpRequest",
-#         "Connection": "keep-alive",
-#         # "Accept-Encoding": "gzip, deflate, br, zstd",
-#         "Accept-Encoding": "identity",
-#         "Origin": "https://www.nseindia.com",
-#         "Sec-Fetch-Dest": "empty",
-#         "Sec-Fetch-Mode": "cors",
-#         "Sec-Fetch-Site": "same-origin",
-#     }
-
-# def get_fii_net():
-#     url = "https://www.nseindia.com/api/fiidiiTradeReact"
-#     home_url = "https://www.nseindia.com/"
-
-#     headers = get_random_headers()
-
-#     # Create a session to store cookies between requests
-#     session = requests.Session()
-
-#     # Add retry logic
-#     retries = Retry(
-#         total=3,
-#         backoff_factor=1,
-#         status_forcelist=[429, 500, 502, 503, 504]
-#     )
-#     session.mount("https://", HTTPAdapter(max_retries=retries))
-#     session.headers.update(headers)
-
-#     try:
-#         # Step 1: Visit homepage to collect cookies
-#         home_resp = session.get(home_url, timeout=10)
-#         home_resp.raise_for_status()
-
-#         # Step 2: Random delay to mimic human browsing
-#         time.sleep(random.uniform(2.0, 4.0))
-
-#         # Step 3: Request API endpoint using same session (cookies + headers)
-#         api_resp = session.get(url, timeout=10)
-#         api_resp.raise_for_status()
-#         data = api_resp.json()
-
-#         # Step 4: Extract FII net value
-#         fii = next((x['netValue'] for x in data if 'FII' in x.get('category', '')), None)
-#         return float(fii) if fii else 0.0
-
-#     except Exception as e:
-#         print(f"❌ Failed to fetch FII data: {e}")
-#         return None
-
-
-from seleniumbase import SB
-import json
-import time
+    return {
+        "User-Agent": ua,
+        "Accept": "application/json",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.nseindia.com/",
+        "X-Requested-With": "XMLHttpRequest",
+        "Connection": "keep-alive",
+        # "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Encoding": "identity",
+        "Origin": "https://www.nseindia.com",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+    }
 
 def get_fii_net():
-    api_url = "https://www.nseindia.com/api/fiidiiTradeReact"
+    url = "https://www.nseindia.com/api/fiidiiTradeReact"
     home_url = "https://www.nseindia.com/"
 
+    headers = get_random_headers()
+
+    # Create a session to store cookies between requests
+    session = requests.Session()
+
+    # Add retry logic
+    retries = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504]
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+    session.headers.update(headers)
+
     try:
-        with SB(uc=True, headed=True, locale="en") as sb:
-            # Step 1: Open NSE homepage to establish session
-            sb.open(home_url)
-            sb.wait_for_ready_state_complete()
-            time.sleep(3)  # human-like pause
+        # Step 1: Visit homepage to collect cookies
+        home_resp = session.get(home_url, timeout=10)
+        home_resp.raise_for_status()
 
-            # Step 2: Fetch API via browser (bypasses bot detection)
-            response = sb.execute_script("""
-                return fetch(arguments[0], {
-                    method: 'GET',
-                    credentials: 'include'
-                }).then(r => r.text());
-            """, api_url)
+        # Step 2: Random delay to mimic human browsing
+        time.sleep(random.uniform(2.0, 4.0))
 
-            data = json.loads(response)
+        # Step 3: Request API endpoint using same session (cookies + headers)
+        api_resp = session.get(url, timeout=10)
+        api_resp.raise_for_status()
+        data = api_resp.json()
 
-            # Step 3: Extract FII net value
-            fii = next(
-                (float(x["netValue"]) for x in data
-                 if "FII" in x.get("category", "")),
-                0.0
-            )
-
-            return fii
+        # Step 4: Extract FII net value
+        fii = next((x['netValue'] for x in data if 'FII' in x.get('category', '')), None)
+        return float(fii) if fii else 0.0
 
     except Exception as e:
-        print(f"❌ SeleniumBase NSE fetch failed: {e}")
+        print(f"❌ Failed to fetch FII data: {e}")
         return None
-
 
 # def get_fii_net():
 #     url = "https://www.nseindia.com/api/fiidiiTradeReact"

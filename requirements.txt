@@ -1,53 +1,54 @@
-beautifulsoup4==4.13.4
-blinker==1.9.0
-bmdOilPriceFetch==0.6.2
-certifi==2025.7.14
-cffi==1.17.1
-charset-normalizer==3.4.2
-click==8.2.1
-contourpy==1.3.2
-curl_cffi==0.12.0
-cycler==0.12.1
-dateutils==0.6.12
-et_xmlfile==2.0.0
-fake-useragent==2.2.0
-Flask==3.1.1
-fonttools==4.59.0
-frozendict==2.4.6
-greenlet==3.2.3
-idna==3.10
-itsdangerous==2.2.0
-Jinja2==3.1.6
-kiwisolver==1.4.8
-lxml==6.0.0
-MarkupSafe==3.0.2
-matplotlib==3.10.3
-multitasking==0.0.11
-nsepython==2.97
-nsetools==2.0.1
-numpy==2.3.1
-openpyxl==3.1.5
-packaging==25.0
-pandas==2.3.1
-pandas-datareader==0.10.0
-peewee==3.18.2
-pillow==11.3.0
-platformdirs==4.3.8
+# Core automation
+seleniumbase==4.46.4
 playwright==1.54.0
-protobuf==6.31.1
-pycparser==2.22
-pyee==13.0.0
-pyparsing==3.2.3
-python-dateutil==2.9.0.post0
-pytz==2025.2
-random-user-agent==1.0.1
-requests==2.32.4
-scipy==1.16.0
-six==1.17.0
-soupsieve==2.7
-typing_extensions==4.14.1
-tzdata==2025.2
-urllib3==2.5.0
-websockets==15.0.1
-Werkzeug==3.1.3
+
+# # HTTP & parsing
+# requests==2.32.4
+# urllib3==2.5.0
+# beautifulsoup4==4.13.4
+# lxml==6.0.0
+
+# # User agents & scraping helpers
+# fake-useragent==2.2.0
+# random-user-agent==1.0.1
+
+# # Data & analytics
+# pandas==2.3.1
+# numpy==2.3.1
+# scipy==1.16.0
+# matplotlib==3.10.3
 yfinance==0.2.65
+# pandas-datareader==0.10.0
+
+# # Playwright internals
+# greenlet==3.2.3
+# pyee==13.0.0
+# websockets>=16.0
+# typing-extensions >= 4.15.0
+
+# # Flask (optional API / dashboard)
+Flask==3.1.1
+# Werkzeug>=3.0.6,<3.2
+# Jinja2>=3.1.4
+# itsdangerous>=2.2.0
+# blinker>=1.9.0
+
+# # Utilities
+# python-dateutil==2.9.0.post0
+# pytz==2025.2
+# tzdata==2025.2
+# six==1.17.0
+# protobuf==6.31.1
+# pyparsing==3.2.3
+# packaging>=24.2
+# platformdirs>=4.2.0
+# certifi>=2024.2.2
+# charset-normalizer==3.4.2
+# idna>=3.11
+
+# # Excel / images (if used)
+# et_xmlfile==2.0.0
+# pillow==11.3.0
+
+# # Optional NSE helpers (use sparingly)
+# nsepython==2.97

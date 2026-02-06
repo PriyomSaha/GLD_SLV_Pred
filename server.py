@@ -1,5 +1,5 @@
 from flask import Flask
-from main import run_daily_signal
+from main_old import run_daily_signal
 import os
 
 app = Flask(__name__)
